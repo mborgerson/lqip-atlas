@@ -7,6 +7,8 @@ The atlas generation is done with a Python script, everything else is vanilla CS
 
 This was done for https://xemu.app/#compatibility which shows 1000+ thumbnails on a page.
 
+If you need images of non-uniform dimension in your atlas, check out https://github.com/mborgerson/textureatlas.
+
 ## Example
 
 [Demo](https://mborgerson.github.io/lqip-atlas/)
