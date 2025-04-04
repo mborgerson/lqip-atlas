@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>LQIP Placeholder Atlas Demo</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #111;
+      color: #eee;
+    }
+
+    #container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 20px;
+    }
+
+    .thumb {
+      width: 256px;
+      height: 366px;
+      background-image: url('atlas.jpg');
+      background-repeat: no-repeat;
+      background-size: calc(50 * 256px) auto; /* 50 thumbs per row */
+      filter: blur(12px);
+      image-rendering: pixelated;
+      transition: filter 0.4s ease;
+      position: relative;
+    }
+
+    .thumb img {
+      position: absolute;
+      width: 256px;
+      height: 366px;
+      top: 0;
+      left: 0;
+      object-fit: cover;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .thumb img.loaded {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+<p>Click to toggle low/high quality</p>
+
+<div id="container">
+</div>
+
+<script type="module">
+var fullImageWidth = 256;
+var tinyImageWidth = 16;
+const scale = fullImageWidth/tinyImageWidth;
+const atlasMap = await fetch('atlas_map.json').then(res => res.json());
+
+const createThumb = (filename, x, y) => {
+  const div = document.createElement('div');
+  div.className = 'thumb';
+  div.style.backgroundPosition = `-${x * scale}px -${y * scale}px`;
+
+  const img = document.createElement('img');
+  img.dataset.src = `${filename}`;
+  img.loading = 'lazy';
+
+  // Click to toggle
+  div.addEventListener('click', () => {
+    const showingFull = img.classList.contains('loaded') && img.style.display !== 'none';
+    if (showingFull) {
+      img.style.display = 'none';
+      div.style.filter = 'blur(12px)';
+    } else {
+      img.style.display = 'block';
+      div.style.filter = 'none';
+    }
+  });
+
+  div.appendChild(img);
+  document.getElementById('container').appendChild(div);
+};
+
+for (const [filename, coords] of Object.entries(atlasMap)) {
+  createThumb(filename, coords.x, coords.y);
+}
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (!entry.isIntersecting) return;
+    const img = entry.target;
+    const src = img.dataset.src;
+    if (src) {
+      img.src = src;
+      img.onload = () => {
+        img.classList.add('loaded');
+        img.style.opacity = '1';
+        img.parentNode.style.filter = 'none';
+      };
+      observer.unobserve(img);
+    }
+  });
+}, { rootMargin: '100px' });
+
+document.querySelectorAll('.thumb img').forEach(img => observer.observe(img));
+</script>
+
+</body>
+</html>
